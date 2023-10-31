@@ -7,6 +7,8 @@ from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
 from api.v1 import film
+from api.v1 import person as person_router
+from api.v1 import genre as genre_router
 from core import config
 from core.logger import LOGGING
 from db import elastic
@@ -46,6 +48,8 @@ async def shutdown():
 
 
 app.include_router(film.router, prefix='/v1/film', tags=['film'])
+app.include_router(person_router.router, prefix='/v1/person', tags=['person'])
+app.include_router(genre_router.router, prefix='/v1/genre', tags=['genre'])
 
 if __name__ == '__main__':
     # `uvicorn main:app --host 0.0.0.0 --port 8000`

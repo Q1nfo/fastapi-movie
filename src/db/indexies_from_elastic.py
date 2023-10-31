@@ -28,6 +28,7 @@ class Indexes(Enum):
                 "full_name": {
                     "type": "text",
                     "analyzer": "ru_en",
+                    "fielddata": True,
                 },
                 "birth_date": {
                     "type": "keyword",
