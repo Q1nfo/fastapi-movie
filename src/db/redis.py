@@ -1,7 +1,7 @@
-# from aioredis import Redis
-#
-# redis: Redis = None
-#
-#
-# async def get_redis() -> Redis:
-#     return redis
+from redis import asyncio as aioredis
+
+redis: aioredis.Redis = None
+
+
+async def get_redis() -> aioredis.Redis:
+    return redis

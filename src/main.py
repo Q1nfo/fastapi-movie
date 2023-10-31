@@ -2,7 +2,8 @@ import logging
 
 
 import uvicorn as uvicorn
-from elasticsearch import AsyncElasticsearch
+from elasticsearch import AsyncElasticsearch, Elasticsearch
+from redis import asyncio as aioredis
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
@@ -20,16 +21,17 @@ app = FastAPI(
 )
 
 
-# @app.on_event('startup')
-# async def startup():
-#     # redis.redis = await aioredis.create_redis_pool((config.REDIS_HOST, config.REDIS_PORT), minsize=10, maxsize=20)
-#     # elastic.es = AsyncElasticsearch(hosts=[f'{config.ELASTIC_HOST}:{config.ELASTIC_PORT}'])
-#
-#
-# @app.on_event('shutdown')
-# async def shutdown():
-#     await redis.redis.close()
-#     await elastic.es.close()
+@app.on_event('startup')
+async def startup():
+    redis.redis = aioredis.ConnectionPool.from_url(f'redis://{config.REDIS_HOST}:{config.REDIS_PORT}')
+    # elastic.es = AsyncElasticsearch(hosts=[f'http://{config.ELASTIC_HOST}:{config.ELASTIC_PORT}'])
+    elastic.es = Elasticsearch(hosts=[f'http://{config.ELASTIC_HOST}:{config.ELASTIC_PORT}'])
+
+
+@app.on_event('shutdown')
+async def shutdown():
+    await redis.redis.close()
+    await elastic.es.close()
 
 
 app.include_router(film.router, prefix='/v1/film', tags=['film'])
