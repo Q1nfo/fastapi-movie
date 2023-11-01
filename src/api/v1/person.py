@@ -3,6 +3,7 @@ from http import HTTPStatus
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi_cache.decorator import cache
 from pydantic import BaseModel
 
 from services.film import FilmService, get_film_service
@@ -18,6 +19,7 @@ class Person(BaseModel):
 
 
 @router.get('/person/{person_id}', response_model=Person)
+@cache(expire=200)
 async def person_details(person_id: str, person_service: PersonService = Depends(get_person_service)) -> Person:
     person = await person_service.get_by_id(person_id)
     if not person:
@@ -27,6 +29,7 @@ async def person_details(person_id: str, person_service: PersonService = Depends
 
 
 @router.get('/persons')
+@cache(expire=200)
 async def film_list(person_service: PersonService = Depends(get_person_service),
                     count: int = 10, offset: int = 0,
                     sort: Optional[str] = "id") -> list[Person]:
