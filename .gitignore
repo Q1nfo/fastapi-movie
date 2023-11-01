@@ -283,3 +283,5 @@ etc/tables.txt
 
 
 etc/fill-elastic/
+
+test_redis.py

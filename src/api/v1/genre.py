@@ -2,6 +2,7 @@ from http import HTTPStatus
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi_cache.decorator import cache
 from pydantic import BaseModel
 
 from services.genre import GenreService, get_genre_service
@@ -16,6 +17,7 @@ class Genre(BaseModel):
 
 
 @router.get('/genre/{genre_id}', response_model=Genre)
+@cache(expire=200)
 async def genre_details(genre_id: str, genre_service: GenreService = Depends(get_genre_service)) -> Genre:
     genre = await genre_service.get_by_id(genre_id)
     if not genre_id:
@@ -25,6 +27,7 @@ async def genre_details(genre_id: str, genre_service: GenreService = Depends(get
 
 
 @router.get('/genres')
+@cache(expire=200)
 async def genre_list(genre_service: GenreService = Depends(get_genre_service),
                      count: int = 10, offset: int = 0,
                      sort: Optional[str] = "id") -> list[Genre]:

@@ -2,6 +2,7 @@ from http import HTTPStatus
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi_cache.decorator import cache
 from pydantic import BaseModel
 
 from services.film import FilmService, get_film_service
@@ -22,6 +23,7 @@ class Film(BaseModel):
 
 
 @router.get('/movies/{film_id}', response_model=Film)
+@cache(expire=200)
 async def film_details(film_id: str, film_service: FilmService = Depends(get_film_service)) -> Film:
     film = await film_service.get_by_id(film_id)
     if not film:
@@ -31,10 +33,10 @@ async def film_details(film_id: str, film_service: FilmService = Depends(get_fil
 
 
 @router.get('/movies')
+@cache(expire=200)
 async def film_list(film_service: FilmService = Depends(get_film_service),
                     count: int = 10, offset: int = 0,
                     sort: Optional[str] = "id") -> list[Film]:
-
     films = await film_service.get_by_filters(count, offset, sort)
 
     if not films:

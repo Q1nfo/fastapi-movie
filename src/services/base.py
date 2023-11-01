@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Optional, Any, Coroutine
 
 from db import redis
 from elastic_transport import ObjectApiResponse
-from elasticsearch import BadRequestError
+from elasticsearch import BadRequestError, AsyncElasticsearch
 from pydantic._internal._model_construction import ModelMetaclass
 
 
@@ -10,17 +10,45 @@ class BaseService:
     index = None
     redis = redis.redis
     model = None
-    FILM_CACHE_EXPIRE_IN_SECONDS = None
+    FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
-    @classmethod
-    async def _object_from_cache(cls, film_id: str) -> Optional[model]:
+    def __init__(self, elastic: AsyncElasticsearch):
+        self.elastic = elastic
+
+    async def get_by_id(self, object_id: str) -> Optional[model]:
+        object = self._get_object_from_elastic(object_id)
+        if not object:
+            return None
+
+        return object
+
+    async def get_by_filters(self, count: int,
+                             offset: int,
+                             sort: str) -> Optional[list[model]]:
         try:
-            async with cls.redis.pipeline(transaction=True) as pipe:
-                data = await pipe.get(film_id).execute()
-        except Exception as e:
+            object: Coroutine[Any, Any, ObjectApiResponse[Any]] = self.elastic.search(index=self.index, body={
+                "size": count,
+                "from": offset,
+                "sort": {
+                    sort: {
+                        "order": "desc",
+                    }
+                },
+            })
+        except BadRequestError as e:
+            print(e)
             return None
-        if not data:
+
+        if not object:
             return None
+
+        objects = self._transform_to_dict_elastic_request(object, model=self.model)
+
+        return objects
+
+    def _get_object_from_elastic(self, object_id: str) -> Optional[model]:
+        doc = self.elastic.get(index=self.index, id=object_id)
+        return self.model(**doc['_source'])
 
     @staticmethod
     def _transform_to_dict_elastic_request(request: ObjectApiResponse, model: ModelMetaclass) -> list[model]:
@@ -28,11 +56,4 @@ class BaseService:
 
         return [model(**fields['_source']) for fields in objects]
 
-    @classmethod
-    async def _put_object_to_cache(cls, index: model):
-        try:
-            async with cls.redis.pipeline(transaction=True) as pipe:
-                await pipe.set(index.id, index.json(), ex=cls.FILM_CACHE_EXPIRE_IN_SECONDS)
-        except Exception as e:
-            print(e)
 
