@@ -284,4 +284,7 @@ etc/tables.txt
 
 etc/fill-elastic/
 
-test_redis.py
+some_func.py
+test_req.txt
+
+tests/

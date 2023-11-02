@@ -19,7 +19,9 @@ from db.indexies_from_elastic import Indexes
 from services.elastic import IndexBuilder, Indexer
 
 app = FastAPI(
-    title=config.PROJECT_NAME,
+    title='Read-only API для онлайн-кинотеатра',
+    description='Информация о фильмах, жанрах и людях, участвовавших в создании произведения',
+    version='1.0.0',
     docs_url='/api/openapi',
     openapi_url='/api/openapi.json',
     default_response_class=ORJSONResponse,

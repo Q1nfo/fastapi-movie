@@ -39,3 +39,16 @@ async def genre_list(genre_service: GenreService = Depends(get_genre_service),
     response = [Genre(**genre.dict()) for genre in genres]
 
     return response
+
+
+@router.get('/genres/search/')
+async def film_search(genre_service: GenreService = Depends(get_genre_service), query: str = '', sort: str = 'id',
+                      fields: str = 'name'):
+    genres = await genre_service.search_by_query(query, fields, sort)
+
+    if not genres:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='genre not found in your fields')
+
+    response = [Genre(**genre.dict()) for genre in genres]
+
+    return response
