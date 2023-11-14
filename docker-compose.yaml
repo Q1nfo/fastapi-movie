@@ -3,13 +3,18 @@ version: '3.9'
 services:
   web:
     build: .
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
+    command: python src/main.py
+    restart: always
     volumes:
       - .:/app
     ports:
-      - 8000:8000
+      - "8080:8080"
     expose:
-      - 8000
+      - 8080
+    env_file:
+      - .env
+    networks:
+      - elk
     depends_on:
       - elasticsearch
       - redis
@@ -17,51 +22,33 @@ services:
   redis:
     image: redis:latest
     ports:
-      - 6379:6379
+      - "6379:6379"
     expose:
       - 6379
+
   elasticsearch:
-    build:
-      context: etc/elasticsearch/
-      args:
-        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    image: bitnami/elasticsearch
     volumes:
-      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
-      - elasticsearch:/usr/share/elasticsearch/data:Z
+      - elasticsearch_data:/bitnami/elasticsearch/data
     ports:
-      - 9200:9200
-      - 9300:9300
+      - "9200:9200"
+      - "9300:9300"
     expose:
       - 9200
     environment:
-      node.name: elasticsearch
-      ES_JAVA_OPTS: -Xms512m -Xmx512m
-      # Bootstrap password.
-      # Used to initialize the keystore during the initial startup of
-      # Elasticsearch. Ignored on subsequent runs.
-      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
-      # Use single node discovery in order to disable production mode and avoid bootstrap checks.
-      # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
-      discovery.type: single-node
-    env_file:
-      - etc/.env.elastic
+      - ELASTIC_VERSION=8.10.4
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+      - network.host=0.0.0.0
+      - http.port=9200
     networks:
       - elk
     restart: unless-stopped
 
   kibana:
-    build:
-      context: etc/kibana/
-      args:
-        ELASTIC_VERSION: ${ELASTIC_VERSION}
-    volumes:
-      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
+    image: bitnami/kibana
     ports:
-      - 5601:5601
-    environment:
-      KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
-    env_file:
-      - etc/.env.elastic
+      - "5601:5601"
     networks:
       - elk
     depends_on:
@@ -73,4 +60,5 @@ networks:
     driver: bridge
 
 volumes:
-  elasticsearch:
+  elasticsearch_data:
+    driver: local

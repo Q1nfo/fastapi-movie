@@ -37,11 +37,17 @@ async def film_details(film_id: str, film_service: FilmService = Depends(get_fil
     return Film(**film.dict())
 
 
-@router.get('/movies')
+@router.get('/movies',
+            response_model=list[Film],
+            summary='Список фильмов',
+            description='Список фильмов по некоторым фильтрам',
+            response_description='Список Филмов',
+            )
 @cache(expire=200)
 async def film_list(film_service: FilmService = Depends(get_film_service),
                     count: int = 10, offset: int = 0,
                     sort: Optional[str] = "id") -> list[Film]:
+
     films = await film_service.get_by_filters(count, offset, sort)
 
     if not films:
@@ -52,7 +58,12 @@ async def film_list(film_service: FilmService = Depends(get_film_service),
     return response
 
 
-@router.get('/movies/search/')
+@router.get('/movies/search/',
+            response_model=list[Film],
+            summary='Поиск кинопроизведений',
+            description='Полнотектовый поиск фильмов',
+            response_description='Список фильмов подходящих под критерии поиска',
+            )
 async def film_search(film_service: FilmService = Depends(get_film_service), query: str = '', sort: str = 'id',
                       fields: str = 'title, description'):
     films = await film_service.search_by_query(query, fields, sort)

@@ -1,9 +1,10 @@
 from typing import Optional, Any, Coroutine
 
-from db import redis
 from elastic_transport import ObjectApiResponse
 from elasticsearch import BadRequestError, AsyncElasticsearch
 from pydantic._internal._model_construction import ModelMetaclass
+
+from db import redis
 
 
 class BaseService:

@@ -11,6 +11,7 @@ class Indexes(Enum):
                 "name": {
                     "type": "text",
                     "analyzer": "ru_en",
+                    "fielddata": True
                 },
                 "description": {
                     "type": "text",
@@ -28,7 +29,7 @@ class Indexes(Enum):
                 "full_name": {
                     "type": "text",
                     "analyzer": "ru_en",
-                    "fielddata": True,
+                    "fielddata": "true"
                 },
                 "birth_date": {
                     "type": "keyword",
