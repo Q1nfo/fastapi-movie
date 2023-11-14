@@ -22,7 +22,12 @@ class Film(BaseModel):
     director: list[str]
 
 
-@router.get('/movies/{film_id}', response_model=Film)
+@router.get('/movies/{film_id}',
+            response_model=Film,
+            summary='Поиск кинопроизведения',
+            description='Поиск кинопроизведения по его id',
+            response_description='Название и рейтинг фильма',
+            )
 @cache(expire=200)
 async def film_details(film_id: str, film_service: FilmService = Depends(get_film_service)) -> Film:
     film = await film_service.get_by_id(film_id)
@@ -32,15 +37,39 @@ async def film_details(film_id: str, film_service: FilmService = Depends(get_fil
     return Film(**film.dict())
 
 
-@router.get('/movies')
+@router.get('/movies',
+            response_model=list[Film],
+            summary='Список фильмов',
+            description='Список фильмов по некоторым фильтрам',
+            response_description='Список Филмов',
+            )
 @cache(expire=200)
 async def film_list(film_service: FilmService = Depends(get_film_service),
                     count: int = 10, offset: int = 0,
                     sort: Optional[str] = "id") -> list[Film]:
+
     films = await film_service.get_by_filters(count, offset, sort)
 
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='films not found in cinema')
+
+    response = [Film(**film.dict()) for film in films]
+
+    return response
+
+
+@router.get('/movies/search/',
+            response_model=list[Film],
+            summary='Поиск кинопроизведений',
+            description='Полнотектовый поиск фильмов',
+            response_description='Список фильмов подходящих под критерии поиска',
+            )
+async def film_search(film_service: FilmService = Depends(get_film_service), query: str = '', sort: str = 'id',
+                      fields: str = 'title, description'):
+    films = await film_service.search_by_query(query, fields, sort)
+
+    if not films:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='films not found in your fields')
 
     response = [Film(**film.dict()) for film in films]
 

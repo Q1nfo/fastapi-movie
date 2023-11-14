@@ -16,7 +16,12 @@ class Genre(BaseModel):
     description: str | None
 
 
-@router.get('/genre/{genre_id}', response_model=Genre)
+@router.get('/genre/{genre_id}',
+            response_model=Genre,
+            summary='Поиск определенного жанра',
+            description='Поиска жанра по его id',
+            response_description='Жанр и его параметры',
+            )
 @cache(expire=200)
 async def genre_details(genre_id: str, genre_service: GenreService = Depends(get_genre_service)) -> Genre:
     genre = await genre_service.get_by_id(genre_id)
@@ -26,7 +31,12 @@ async def genre_details(genre_id: str, genre_service: GenreService = Depends(get
     return Genre(**genre.dict())
 
 
-@router.get('/genres')
+@router.get('/genres',
+            response_model=list[Genre],
+            summary='Поиск жанров',
+            description='Поиск жанров по фильтрам',
+            response_description='Список жанров и их параметры',
+            )
 @cache(expire=200)
 async def genre_list(genre_service: GenreService = Depends(get_genre_service),
                      count: int = 10, offset: int = 0,
@@ -35,6 +45,25 @@ async def genre_list(genre_service: GenreService = Depends(get_genre_service),
 
     if not genres:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='genres not found in cinema')
+
+    response = [Genre(**genre.dict()) for genre in genres]
+
+    return response
+
+
+@router.get('/genres/search/',
+            response_model=list[Genre],
+            summary='Поиск жанров',
+            description='Полнотекстовый поиска жанров',
+            response_description='Список жанров подходящих под критерии поиска',
+            )
+async def film_search(genre_service: GenreService = Depends(get_genre_service), query: str = '', sort: str = 'id',
+                      fields: str = 'name'):
+
+    genres = await genre_service.search_by_query(query, fields, sort)
+
+    if not genres:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='genre not found in your fields')
 
     response = [Genre(**genre.dict()) for genre in genres]
 

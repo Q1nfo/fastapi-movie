@@ -32,6 +32,28 @@ class GenreService(BaseService):
 
         return genres
 
+    async def search_by_query(self, query: str, fields: str, sort: str):
+        query = {
+            "multi_match": {
+                "query": query,
+                "fields": [field for field in fields.split(', ')]
+            }
+        }
+        try:
+            object = self.elastic.search(index=self.index, body={
+                "query": query
+            })
+        except BadRequestError as e:
+            print(e)
+            return None
+
+        if not object:
+            return None
+
+        objects = self._transform_to_dict_elastic_request(object, model=self.model)
+
+        return objects
+
 
 @lru_cache()
 def get_genre_service(

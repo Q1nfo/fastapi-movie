@@ -1,9 +1,5 @@
 from functools import lru_cache
-from typing import Optional
 
-from elastic_transport import ObjectApiResponse
-from pydantic._internal._model_construction import ModelMetaclass
-from redis import asyncio as aioredis
 from elasticsearch import AsyncElasticsearch, BadRequestError
 from fastapi import Depends
 

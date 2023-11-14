@@ -1,4 +1,3 @@
-import datetime
 import json
 from dataclasses import dataclass
 from typing import Tuple, List
@@ -32,7 +31,7 @@ class Indexer(object):
     @staticmethod
     def _connection_postgres():
         """Подключение к POSTGRES."""
-        dsl = {'dbname': 'movies_yandex', 'user': 'postgres', 'password': 12345, 'host': '127.0.0.1', 'port': 5432}
+        dsl = {'dbname': 'movies_yandex', 'user': 'postgres', 'password': 12345, 'host': 'db,', 'port': 5432}
 
         return psycopg2.connect(**dsl, cursor_factory=DictCursor)
 
